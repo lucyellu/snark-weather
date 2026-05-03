@@ -1,0 +1,314 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: weather
+    description: Weather operations
+  - name: openai
+    description: AI snarky commentary
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /weather/current:
+    get:
+      operationId: getCurrentWeather
+      tags: [weather]
+      summary: Get current weather for coordinates
+      parameters:
+        - in: query
+          name: lat
+          required: true
+          schema:
+            type: number
+        - in: query
+          name: lon
+          required: true
+          schema:
+            type: number
+        - in: query
+          name: city
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Current weather data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeatherData"
+
+  /weather/forecast:
+    get:
+      operationId: getWeatherForecast
+      tags: [weather]
+      summary: Get 7-day weather forecast
+      parameters:
+        - in: query
+          name: lat
+          required: true
+          schema:
+            type: number
+        - in: query
+          name: lon
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: 7-day forecast
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForecastData"
+
+  /weather/geocode:
+    get:
+      operationId: geocodeCity
+      tags: [weather]
+      summary: Convert city name to coordinates
+      parameters:
+        - in: query
+          name: city
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Geocoded location
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeoLocation"
+
+  /openai/snark:
+    post:
+      operationId: generateSnark
+      tags: [openai]
+      summary: Generate snarky AI commentary for current weather
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SnarkRequest"
+      responses:
+        "200":
+          description: Snarky commentary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnarkResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    WeatherData:
+      type: object
+      properties:
+        city:
+          type: string
+        lat:
+          type: number
+        lon:
+          type: number
+        temperature:
+          type: number
+        feelsLike:
+          type: number
+        humidity:
+          type: number
+        windSpeed:
+          type: number
+        windDirection:
+          type: number
+        uvIndex:
+          type: number
+        visibility:
+          type: number
+        precipitation:
+          type: number
+        weatherCode:
+          type: integer
+        conditionLabel:
+          type: string
+        isDay:
+          type: boolean
+        updatedAt:
+          type: string
+      required:
+        - city
+        - lat
+        - lon
+        - temperature
+        - feelsLike
+        - humidity
+        - windSpeed
+        - windDirection
+        - uvIndex
+        - visibility
+        - precipitation
+        - weatherCode
+        - conditionLabel
+        - isDay
+        - updatedAt
+
+    ForecastDay:
+      type: object
+      properties:
+        date:
+          type: string
+        dayLabel:
+          type: string
+        tempMax:
+          type: number
+        tempMin:
+          type: number
+        weatherCode:
+          type: integer
+        conditionLabel:
+          type: string
+        precipitationSum:
+          type: number
+        windSpeedMax:
+          type: number
+        uvIndexMax:
+          type: number
+      required:
+        - date
+        - dayLabel
+        - tempMax
+        - tempMin
+        - weatherCode
+        - conditionLabel
+        - precipitationSum
+        - windSpeedMax
+        - uvIndexMax
+
+    HourlyForecast:
+      type: object
+      properties:
+        time:
+          type: string
+        temperature:
+          type: number
+        weatherCode:
+          type: integer
+        precipitationProbability:
+          type: number
+        windSpeed:
+          type: number
+      required:
+        - time
+        - temperature
+        - weatherCode
+        - precipitationProbability
+        - windSpeed
+
+    ForecastData:
+      type: object
+      properties:
+        daily:
+          type: array
+          items:
+            $ref: "#/components/schemas/ForecastDay"
+        hourly:
+          type: array
+          items:
+            $ref: "#/components/schemas/HourlyForecast"
+      required:
+        - daily
+        - hourly
+
+    GeoLocation:
+      type: object
+      properties:
+        city:
+          type: string
+        lat:
+          type: number
+        lon:
+          type: number
+        country:
+          type: string
+      required:
+        - city
+        - lat
+        - lon
+        - country
+
+    SnarkRequest:
+      type: object
+      properties:
+        temperature:
+          type: number
+        feelsLike:
+          type: number
+        conditionLabel:
+          type: string
+        city:
+          type: string
+        humidity:
+          type: number
+        windSpeed:
+          type: number
+        uvIndex:
+          type: number
+        isDay:
+          type: boolean
+        precipitation:
+          type: number
+        dailyHigh:
+          type: number
+        dailyLow:
+          type: number
+        precipitationChance:
+          type: number
+        tomorrowCondition:
+          type: string
+      required:
+        - temperature
+        - conditionLabel
+        - city
+        - humidity
+        - windSpeed
+        - uvIndex
+        - isDay
+
+    SnarkResponse:
+      type: object
+      properties:
+        commentary:
+          type: string
+        mood:
+          type: string
+      required:
+        - commentary
+        - mood

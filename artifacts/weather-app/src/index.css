@@ -1,0 +1,392 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-border: hsl(var(--primary-border));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-border: hsl(var(--secondary-border));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted-border: hsl(var(--muted-border));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-border: hsl(var(--accent-border));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-border: hsl(var(--destructive-border));
+
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-primary-border: hsl(var(--sidebar-primary-border));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-accent-border: hsl(var(--sidebar-accent-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --font-sans: var(--app-font-sans);
+  --font-serif: var(--app-font-serif);
+  --font-mono: var(--app-font-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  color-scheme: dark;
+  --background: 222 47% 11%; /* Default dark base */
+  --foreground: 210 40% 98%;
+
+  --card: 222 47% 11%;
+  --card-foreground: 210 40% 98%;
+  --card-border: 217.2 32.6% 17.5%;
+
+  --popover: 222 47% 11%;
+  --popover-foreground: 210 40% 98%;
+  --popover-border: 217.2 32.6% 17.5%;
+
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --primary-border: 210 40% 98%;
+
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --secondary-border: 217.2 32.6% 17.5%;
+
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --muted-border: 217.2 32.6% 17.5%;
+
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --accent-border: 217.2 32.6% 17.5%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --destructive-border: 0 62.8% 30.6%;
+
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
+
+  --sidebar: 222 47% 11%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-border: 217.2 32.6% 17.5%;
+  --sidebar-primary: 210 40% 98%;
+  --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+  --sidebar-primary-border: 210 40% 98%;
+  --sidebar-accent: 217.2 32.6% 17.5%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-accent-border: 217.2 32.6% 17.5%;
+  --sidebar-ring: 212.7 26.8% 83.9%;
+
+  --radius: 0.5rem;
+
+  --app-font-sans: 'Poppins', sans-serif;
+  --app-font-serif: 'Fraunces', serif;
+  --app-font-mono: Menlo, monospace;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* =========================================================
+   3D Glass Weather Icons — exact port of CodePen MWQKgmv
+   by Vincent Durand / onediv
+   ========================================================= */
+
+@keyframes cp-rotation {
+  100% { transform: rotate(1turn); }
+}
+
+@keyframes cp-snow {
+  0%        { transform: translateY(-12rem) rotate(45deg); }
+  50%, 100% { transform: translateY(12rem)  rotate(45deg); }
+}
+
+@keyframes cp-thunder {
+  0%, 25%, 75%, 100% {
+    filter:
+      drop-shadow(0px -1px 0px #cfb8e5)
+      drop-shadow(0px 0px 0px #9a4ee7)
+      drop-shadow(0px 0px 0px rgba(154,78,231,0.3))
+      drop-shadow(-2px -2px 1px #3c3762)
+      drop-shadow(4px 1px 1px #3c3762);
+  }
+  50% {
+    filter:
+      drop-shadow(0px -1px 0px #cfb8e5)
+      drop-shadow(0px 0px 3px #9a4ee7)
+      drop-shadow(0px 0px 30px rgba(154,78,231,0.3))
+      drop-shadow(-2px -2px 1px #3c3762)
+      drop-shadow(4px 1px 1px #3c3762);
+  }
+}
+
+@keyframes cp-floating {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(1rem); }
+}
+
+@keyframes cp-pulse {
+  0%, 100% { transform: scale(1);   }
+  50%       { transform: scale(0.9); }
+}
+
+@keyframes cp-neon {
+  0%, 40%, 60%, 100% { filter: brightness(1);   }
+  50%                 { filter: brightness(0.9); }
+}
+
+/* Outer wrapper — provides the floating animation */
+.cp-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: cp-floating 3s ease-in-out infinite;
+}
+
+/* Icon container — exact CodePen dimensions & scale */
+.cp-icon {
+  position: relative;
+  width: 18rem;
+  height: 13rem;
+  transform: scale(0.8);
+  font-size: 15px; /* lock rem base to match CodePen */
+}
+
+/* ── Sun ───────────────────────────────────────────── */
+.cp-icon__sun {
+  position: absolute;
+  top: 1rem;
+  right: 3.5rem;
+  height: 5rem;
+  width: 5rem;
+  background: linear-gradient(45deg, #f09559 40%, #f0ca43);
+  border-radius: 50%;
+  filter:
+    drop-shadow(0 0 10px rgba(239,218,144,0.4))
+    drop-shadow(0 0 30px rgba(240,202,67,0.4));
+}
+
+.cp-icon__sun-lights {
+  position: absolute;
+  inset: 0;
+  animation: cp-rotation 6s linear infinite;
+}
+
+.cp-icon__sun-light {
+  position: absolute;
+  top: -2.75rem;
+  left: 50%;
+  margin-left: -0.45rem;
+  border-radius: 1rem;
+  width: 0.9rem;
+  height: 2.5rem;
+  background: linear-gradient(45deg, #f0b343, #f0ca43);
+  transform-origin: 50% 5.25rem;
+}
+.cp-icon__sun-light:nth-child(2) { transform: rotate(45deg);  }
+.cp-icon__sun-light:nth-child(3) { transform: rotate(90deg);  }
+.cp-icon__sun-light:nth-child(4) { transform: rotate(135deg); }
+.cp-icon__sun-light:nth-child(5) { transform: rotate(180deg); }
+.cp-icon__sun-light:nth-child(6) { transform: rotate(225deg); }
+.cp-icon__sun-light:nth-child(7) { transform: rotate(270deg); }
+.cp-icon__sun-light:nth-child(8) { transform: rotate(315deg); }
+
+/* ── Thunder bolt ──────────────────────────────────── */
+.cp-icon__thunder {
+  position: absolute;
+  top: 10rem;
+  left: 50%;
+  margin-left: -2.4rem;
+  width: 4.8rem;
+  height: 8.6rem;
+  filter:
+    drop-shadow(0px -1px 0px #cfb8e5)
+    drop-shadow(0px 0px 0px #9a4ee7)
+    drop-shadow(-2px -2px 1px #3c3762)
+    drop-shadow(4px 1px 1px #3c3762);
+  animation: cp-thunder 3s infinite, cp-floating 3s infinite;
+}
+.cp-icon__thunder::before,
+.cp-icon__thunder::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #645d95;
+  height: 5rem;
+  width: 3rem;
+  border-radius: 0.4rem;
+  box-shadow:
+    inset -0.2rem -0.4rem 0.2rem #3c3762,
+    inset -0.1rem -0.1rem 0.4rem #fff;
+  clip-path: polygon(100% 100%, 0% 100%, 100% 0);
+}
+.cp-icon__thunder::after {
+  top: auto;
+  bottom: 0;
+  left: auto;
+  right: 0;
+  clip-path: polygon(0% 100%, 100% 0%, 45% 0%, 0% 26%);
+  box-shadow:
+    inset 0.2rem 0.3rem 0.2rem #3c3762,
+    inset 0.1rem 0.2rem 0.4rem #fff;
+}
+
+/* ── Rain ──────────────────────────────────────────── */
+.cp-icon__rain {
+  position: absolute;
+  top: 12.8rem;
+  left: 0;
+  width: 100%;
+  height: 10rem;
+  overflow: hidden;
+}
+.cp-icon__rain-drops {
+  position: absolute;
+  top: 0;
+  left: 13rem;
+  height: 0.6rem;
+  width: 0.6rem;
+  background: #7a98e9;
+  animation: cp-snow 3s linear infinite;
+  animation-delay: 1s;
+  transform: translateY(-12rem) rotate(45deg);
+  opacity: 1;
+  color: #7a98e9;
+  border-radius: 0 1rem 1rem;
+  box-shadow:
+    1rem 2rem, 1rem 7rem, 4rem 8rem, -5rem 8rem, -2rem 4rem,
+    0rem 11rem, 4rem 5rem, -2rem 8rem,
+    4rem 3rem 0 -0.1rem, 0rem 5rem 0 -0.1rem,
+    -4rem 5rem 0 -0.1rem, -2rem 10rem 0 -0.1rem,
+    -1rem 3rem 0 -0.2rem, 2rem 5rem 0 -0.2rem,
+    -2rem 11rem 0 -0.2rem, 2rem 9rem 0 -0.2rem,
+    -4rem 3rem 0 -0.2rem;
+}
+
+/* ── Snow ──────────────────────────────────────────── */
+.cp-icon__snow {
+  position: absolute;
+  top: 12.8rem;
+  left: 0;
+  width: 100%;
+  height: 10rem;
+  overflow: hidden;
+}
+.cp-icon__snow-flakes {
+  position: absolute;
+  top: 0;
+  left: 13rem;
+  height: 0.8rem;
+  width: 0.8rem;
+  background: #fff;
+  animation: cp-snow 3s linear infinite;
+  transform: translateY(-12rem) rotate(45deg);
+  opacity: 0.5;
+  color: #fff;
+  box-shadow:
+    1rem 2rem, 1rem 7rem, 4rem 8rem, -5rem 8rem, -2rem 4rem,
+    0rem 11rem, 4rem 5rem, -2rem 8rem,
+    4rem 3rem 0 -0.1rem, 0rem 5rem 0 -0.1rem,
+    -4rem 5rem 0 -0.1rem, -2rem 10rem 0 -0.1rem,
+    -1rem 3rem 0 -0.2rem, 2rem 5rem 0 -0.2rem,
+    -2rem 11rem 0 -0.2rem, 2rem 9rem 0 -0.2rem,
+    -4rem 3rem 0 -0.2rem;
+}
+
+/* ── Cloud ─────────────────────────────────────────── */
+.cp-icon__cloud {
+  position: absolute;
+  left: 0;
+  top: 1rem;
+  width: 18rem;
+  height: 12rem;
+  background: rgba(200, 215, 235, 0.72);
+  opacity: 1;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  /* clip-path is set via inline style per-instance for unique IDs */
+  box-shadow:
+    inset 0rem -1.3rem 0.25rem -1rem #fff,
+    inset 0rem 0rem 5rem 0rem rgba(255,255,255,0.5);
+}
+
+/* Cloud colour variants */
+.cp-icon__cloud--snow    { background: rgba(120, 150, 210, 0.72); }
+.cp-icon__cloud--thunder { background: rgba(140, 145, 165, 0.72); }
+.cp-icon__cloud--dark    { background: rgba(160, 175, 200, 0.68); }
+
+/* Cloud reflections — exact CodePen values */
+.cp-icon__cloud-reflect {
+  height: 12rem;
+  width: 11.9rem;
+  border-radius: 50%;
+  box-shadow:
+    inset 0rem -1.1rem 0.25rem -1rem #fff,
+    inset 0.45rem 0rem 0.25rem -0.25rem #fff,
+    inset -0.45rem 0.5rem 0.25rem -0.45em #fff,
+    inset 0.25rem 0.25rem 0.5rem 0rem rgba(0,0,0,0.3);
+  clip-path: polygon(0 0, 100% 0%, 100% 33%, 50% 30%, 50% 100%, 0% 100%);
+}
+.cp-icon__cloud-reflect--2 {
+  position: absolute;
+  width: 8.7rem;
+  height: 8.7rem;
+  bottom: 0.1rem;
+  right: 0.5rem;
+  clip-path: polygon(0 0, 100% 0%, 100% 100%, 50% 100%, 29% 0%);
+}
+
+/* Cloud SVG (holds the clipPath definition only) */
+.cp-icon__cloud-svg clipPath {
+  transform: scale(0.65);
+}
+
+/* Cloud drop shadow (off-screen element casting a shadow) */
+.cp-icon__cloud-shadow {
+  position: absolute;
+  left: 30rem;
+  top: -30rem;
+  width: 18rem;
+  height: 9rem;
+  border-radius: 50%;
+  box-shadow: -36rem 38rem 7rem rgba(0,0,0,0.33);
+  z-index: -1;
+}

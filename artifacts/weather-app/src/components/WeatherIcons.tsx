@@ -1,0 +1,161 @@
+import React, { useId } from 'react';
+
+const CLOUD_PATH =
+  'M 146.5 293 C 65.644 293 0 227.356 0 146.5 C 0 65.644 65.644 0 146.5 0 C 205.641 0 256.643 35.12 279.772 85.624 C 293.416 79.445 308.559 76 324.5 76 C 384.383 76 433 124.617 433 184.5 C 433 244.383 384.383 293 324.5 293 L 146.5 293 Z';
+
+export type WeatherIconType =
+  | 'sunny'
+  | 'cloudy'
+  | 'partly-cloudy'
+  | 'rainy'
+  | 'thunderstorm'
+  | 'snowy'
+  | 'foggy'
+  | 'windy';
+
+interface WeatherIconProps {
+  type: WeatherIconType;
+  className?: string;
+  /** 'lg' = full animated hero icon; 'sm' = tiny scaled-down version for forecast rows */
+  size?: 'lg' | 'sm';
+}
+
+type CloudVariant = 'default' | 'thunder' | 'snow' | 'dark';
+
+function cloudVariantFor(type: WeatherIconType): CloudVariant {
+  if (type === 'thunderstorm' || type === 'rainy') return 'thunder';
+  if (type === 'snowy') return 'snow';
+  if (type === 'foggy' || type === 'cloudy') return 'dark';
+  return 'default';
+}
+
+interface IconContentsProps {
+  type: WeatherIconType;
+  clipId: string;
+}
+
+function IconContents({ type, clipId }: IconContentsProps) {
+  const variant = cloudVariantFor(type);
+  return (
+    <>
+      {/* Sun — for sunny and partly-cloudy */}
+      {(type === 'sunny' || type === 'partly-cloudy') && (
+        <div className="cp-icon__sun">
+          <div className="cp-icon__sun-lights">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="cp-icon__sun-light" />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Rain drops */}
+      {(type === 'rainy' || type === 'thunderstorm') && (
+        <div className="cp-icon__rain">
+          <div className="cp-icon__rain-drops" />
+        </div>
+      )}
+
+      {/* Snow flakes */}
+      {type === 'snowy' && (
+        <div className="cp-icon__snow">
+          <div className="cp-icon__snow-flakes" />
+        </div>
+      )}
+
+      {/* Lightning bolt */}
+      {type === 'thunderstorm' && <div className="cp-icon__thunder" />}
+
+      {/* Glass cloud — clipped to CodePen cloud shape via unique SVG clipPath */}
+      <div
+        className={`cp-icon__cloud cp-icon__cloud--${variant}`}
+        style={{
+          clipPath: `url(#${clipId})`,
+          WebkitClipPath: `url(#${clipId})`,
+        }}
+      >
+        <div className="cp-icon__cloud-reflect cp-icon__cloud-reflect--1" />
+        <div className="cp-icon__cloud-reflect cp-icon__cloud-reflect--2" />
+        <svg
+          className="cp-icon__cloud-svg"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ isolation: 'isolate' } as React.CSSProperties}
+          viewBox="0 0 200 500"
+          width="50%"
+        >
+          <clipPath id={clipId}>
+            <path d={CLOUD_PATH} fill="currentColor" />
+          </clipPath>
+        </svg>
+      </div>
+
+      {/* Off-screen shadow caster */}
+      <div className="cp-icon__cloud-shadow" />
+    </>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   The .cp-icon itself is 18rem × 13rem at font-size 15px
+   → 270px × 195px, then .cp-icon CSS applies scale(0.8)
+   → rendered visual ≈ 216px × 156px
+   ───────────────────────────────────────────────────────────── */
+const ICON_VISUAL_W = 216; // px
+const ICON_VISUAL_H = 156; // px
+
+export function WeatherIcon({ type, className = '', size = 'lg' }: WeatherIconProps) {
+  const rawId = useId();
+  const clipId = `cp-${rawId.replace(/:/g, '')}`;
+
+  if (size === 'sm') {
+    /* Small forecast icon: scale down to ~44×32px, no floating animation.
+       overflow-visible so sun rays / halos aren't clipped by the container. */
+    const scale = 44 / ICON_VISUAL_W;
+    const w = Math.round(ICON_VISUAL_W * scale);
+    const h = Math.round(ICON_VISUAL_H * scale);
+    return (
+      <div
+        className={`relative flex-shrink-0 ${className}`}
+        style={{ width: w, height: h, overflow: 'visible' }}
+      >
+        <div
+          className="cp-icon"
+          style={{
+            fontSize: '15px',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            animation: 'none',
+            overflow: 'visible',
+          }}
+        >
+          <IconContents type={type} clipId={clipId} />
+        </div>
+      </div>
+    );
+  }
+
+  /* Large hero icon with floating animation */
+  return (
+    <div className={`cp-icon-wrap ${className}`}>
+      <div className="cp-icon" style={{ fontSize: '15px' }}>
+        <IconContents type={type} clipId={clipId} />
+      </div>
+    </div>
+  );
+}
+
+export function mapWeatherCodeToIcon(code: number): WeatherIconType {
+  if (code <= 1) return 'sunny';
+  if (code === 2) return 'partly-cloudy';
+  if (code === 3) return 'cloudy';
+  if (code >= 45 && code <= 48) return 'foggy';
+  if (code >= 51 && code <= 67) return 'rainy';
+  if (code >= 71 && code <= 77) return 'snowy';
+  if (code >= 80 && code <= 82) return 'rainy';
+  if (code >= 85 && code <= 86) return 'snowy';
+  if (code >= 95 && code <= 99) return 'thunderstorm';
+  return 'cloudy';
+}
