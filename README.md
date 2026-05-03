@@ -4,6 +4,20 @@ A snarky AI-powered weather app inspired by [CARROT Weather](https://www.meetcar
 
 SNARK is your grumpy, slightly unhinged radio meteorologist who deeply resents having to report weather. Every forecast comes with a darkly funny, condescending 3–5 sentence briefing — accurate information delivered with maximum withering commentary.
 
+## Screenshots
+
+<p align="center">
+  <img src="snark_screenshot (2).jpg" alt="Desktop view" width="100%" />
+</p>
+
+<p align="center">
+  <img src="snark_screenshot (1).jpg" alt="Mobile view — full scroll" width="30%" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="snark_screenshot (4).jpg" alt="Mobile view — hero" width="30%" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="snark_screenshot (3).jpg" alt="Desktop view — hero" width="30%" />
+</p>
+
 ## Features
 
 - Current conditions — temperature, feels like, humidity, wind, UV index, visibility
