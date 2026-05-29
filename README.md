@@ -1,5 +1,7 @@
 # snark-weather
 
+**[Try it live →](https://snark-weather.netlify.app/)**
+
 A snarky AI-powered weather app inspired by [CARROT Weather](https://www.meetcarrot.com/weather/). Built with Replit.
 
 SNARK is your grumpy, slightly unhinged radio meteorologist who deeply resents having to report weather. Every forecast comes with a darkly funny, condescending 3–5 sentence briefing — accurate information delivered with maximum withering commentary.
