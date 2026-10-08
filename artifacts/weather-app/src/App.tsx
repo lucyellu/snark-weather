@@ -212,7 +212,14 @@ function fmt(d: Date | string, opts: Intl.DateTimeFormatOptions, tz?: string) {
   catch { return new Intl.DateTimeFormat(undefined, opts).format(date); }
 }
 const fmtTime = (d: Date | string, tz?: string) => fmt(d, { hour: 'numeric', minute: '2-digit' }, tz);
-const fmtHour = (d: Date | string, tz?: string) => fmt(d, { hour: 'numeric' }, tz).replace(' ', '');
+// Always "1PM" style (no leading zero), regardless of the device locale
+function fmtHour(d: Date | string, tz?: string) {
+  const date = new Date(d);
+  let out: string;
+  try { out = new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: true, timeZone: tz }).format(date); }
+  catch { out = new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: true }).format(date); }
+  return out.replace(/\s/g, '');
+}
 const fmtDate = (d: Date, tz: string | undefined, long = false) =>
   fmt(d, { weekday: long ? 'long' : 'short', month: 'short', day: 'numeric' }, tz);
 function tzAbbrev(d: Date, tz?: string) {
@@ -734,7 +741,7 @@ export default function App() {
                           <span className="text-xs font-medium mb-2" style={{ color: 'var(--th-muted)' }}>
                             {fmtHour(h.time, effectiveTz)}
                           </span>
-                          <WeatherIcon type={mapWeatherCodeToIcon(h.weatherCode)} size="sm" className="mb-2" />
+                          <WeatherIcon type={mapWeatherCodeToIcon(h.weatherCode)} size="sm" className="mb-6" />
                           <span className="text-sm font-bold" style={{ color: 'var(--th-text)' }}>
                             {Math.round(h.temperature)}°
                           </span>
