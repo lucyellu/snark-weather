@@ -1,0 +1,15 @@
+[build]
+  command = "pnpm install --frozen-lockfile && pnpm --filter @workspace/weather-app run build:vercel"
+  publish = "artifacts/weather-app/dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

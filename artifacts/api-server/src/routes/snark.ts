@@ -2,20 +2,20 @@ import { Router } from "express";
 import OpenAI from "openai";
 import { GenerateSnarkBody } from "@workspace/api-zod";
 
-const deepseek = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY,
-  baseURL: "https://api.deepseek.com",
+const llm = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY || "missing-key",
+  baseURL: "https://api.groq.com/openai/v1",
 });
 
 const router = Router();
 
 const SNARK_MOODS = [
-  "disappointed",
-  "disgusted",
-  "gleeful",
-  "ominous",
-  "condescending",
-  "existential",
+  "deadpan",
+  "cheerfully smug",
+  "mock-dramatic",
+  "dryly amused",
+  "playfully sarcastic",
+  "wry",
 ];
 
 router.post("/snark", async (req, res) => {
@@ -55,28 +55,30 @@ router.post("/snark", async (req, res) => {
     .filter(Boolean)
     .join("; ");
 
-  const systemPrompt = `You are SNARK, a sarcastic weather AI with the personality of a grumpy, slightly unhinged radio meteorologist who deeply resents having to report weather. You're like CARROT Weather's evil twin. Generate a 3–5 sentence daily weather briefing that covers current conditions, the day's expected range, precipitation outlook, and anything else the user should know before leaving the house. Be darkly funny, condescending, and dry — but the information must be genuinely accurate and useful. No markdown, no bullet points, no line breaks. Speak in flowing prose as if it's a morning radio segment. Use dry wit and light flavourful phrases. Never be encouraging. Always find something to complain about. All temperatures in Celsius. Current mood: ${mood}.`;
+  const systemPrompt = `You are SNARK, a witty weather sidekick. Reply with ONE short, funny sentence (max 20 words) about the weather right now, with a useful nudge (umbrella, layers, sunscreen) if relevant. Dry and clever, playful rather than mean or gloomy. No markdown, no emojis, no quotes. Celsius only. Tone: ${mood}.`;
 
-  const userPrompt = `Generate a snarky daily weather briefing for ${city}. Right now: ${conditionLabel}, ${Math.round(temperature)}°C (feels like ${feelsLike !== undefined ? Math.round(feelsLike) : '?'}°C), humidity ${humidity}%, wind ${Math.round(windSpeed)} km/h, UV index ${uvIndex}, ${isDay ? "daytime" : "nighttime"}${precipitation ? `, ${precipitation} mm precipitation` : ""}${forecastDetails ? `. Forecast: ${forecastDetails}` : ""}. Write a flowing 3–5 sentence morning briefing the listener can hear while getting ready. Keep it informative but withering.`;
+  const userPrompt = `${city}: ${conditionLabel}, ${Math.round(temperature)}°C (feels ${feelsLike !== undefined ? Math.round(feelsLike) : "?"}°C), humidity ${humidity}%, wind ${Math.round(windSpeed)} km/h, UV ${uvIndex}, ${isDay ? "day" : "night"}${precipitation ? `, ${precipitation} mm rain` : ""}${forecastDetails ? `. ${forecastDetails}` : ""}.`;
 
   try {
-    const response = await deepseek.chat.completions.create({
-      model: "deepseek-chat",
-      max_tokens: 350,
+    const response = await llm.chat.completions.create({
+      model: process.env.GROQ_MODEL ?? "openai/gpt-oss-20b",
+      max_tokens: 400,
+      reasoning_effort: "low",
+      temperature: 0.9,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
     });
 
-    const commentary = response.choices[0]?.message?.content ?? "The weather exists. How disappointing for everyone.";
+    const commentary = response.choices[0]?.message?.content?.trim() ?? "The weather exists. Make of that what you will.";
 
     res.json({ commentary, mood });
   } catch (err) {
     req.log.error({ err }, "Failed to generate snark");
     res.json({
-      commentary: "My circuits are too disgusted by this weather to comment. You're on your own.",
-      mood: "disgusted",
+      commentary: "My weather circuits are napping. Look out the window?",
+      mood: "deadpan",
     });
   }
 });

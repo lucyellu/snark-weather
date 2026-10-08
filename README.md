@@ -4,7 +4,7 @@
 
 A snarky AI-powered weather app inspired by [CARROT Weather](https://www.meetcarrot.com/weather/). Built with Replit.
 
-SNARK is your grumpy, slightly unhinged radio meteorologist who deeply resents having to report weather. Every forecast comes with a darkly funny, condescending 3–5 sentence briefing — accurate information delivered with maximum withering commentary.
+SNARK is your grumpy, slightly unhinged radio meteorologist who deeply resents having to report weather. Every forecast comes with a single short, witty line — accurate, useful, and a little cheeky.
 
 ## Screenshots
 
@@ -24,7 +24,7 @@ SNARK is your grumpy, slightly unhinged radio meteorologist who deeply resents h
 
 - Current conditions — temperature, feels like, humidity, wind, UV index, visibility
 - Hourly and 7-day forecast
-- AI-generated snarky weather briefing (powered by DeepSeek) with randomized moods: disappointed, gleeful, ominous, condescending, existential...
+- One-liner AI weather quip (powered by Groq's free tier) with randomized tones: deadpan, smug, mock-dramatic, wry...
 - Text-to-speech so SNARK can read the briefing aloud
 - City search + browser geolocation
 - 6 pastel color themes (Peach, Blush, Tangerine, Mint, Sky, Lavender)
@@ -35,7 +35,8 @@ SNARK is your grumpy, slightly unhinged radio meteorologist who deeply resents h
 - **Frontend**: React + TypeScript + Tailwind + Framer Motion
 - **Backend**: Express 5 + TypeScript
 - **Weather data**: [Open-Meteo](https://open-meteo.com/) (free, no API key required)
-- **Snark engine**: DeepSeek API
+- **Snark engine**: Groq (`openai/gpt-oss-20b`, free tier)
+- **Hosting**: Netlify (static site + one function wrapping `api/`)
 - **Monorepo**: pnpm workspaces
 
 ## Running locally
@@ -52,3 +53,15 @@ pnpm --filter @workspace/weather-app run dev
 ```
 
 Set `DEEPSEEK_API_KEY` in your environment (or a `.env` file in `artifacts/api-server/`) to enable the snark commentary. Without it, SNARK falls back to a canned insult.
+
+## Running locally
+
+```
+pnpm install
+copy .env.example .env   # add GROQ_API_KEY
+launch-snark-weather.bat # Windows: API on :8787, web on :5173
+```
+
+## Deploying
+
+Netlify builds from `netlify.toml`. Set `GROQ_API_KEY` in the site's environment variables.
