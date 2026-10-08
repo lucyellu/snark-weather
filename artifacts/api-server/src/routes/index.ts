@@ -1,12 +1,19 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
-import weatherRouter from "./weather";
-import snarkRouter from "./snark";
+// The same handlers Netlify serves in production (see netlify/functions/api.mts).
+import current from "../../../../api/weather/current";
+import forecast from "../../../../api/weather/forecast";
+import geocode from "../../../../api/weather/geocode";
+import search from "../../../../api/weather/search";
+import snark from "../../../../api/openai/snark";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
-router.use("/weather", weatherRouter);
-router.use("/openai", snarkRouter);
+router.get("/weather/current", current);
+router.get("/weather/forecast", forecast);
+router.get("/weather/geocode", geocode);
+router.get("/weather/search", search);
+router.post("/openai/snark", snark);
 
 export default router;

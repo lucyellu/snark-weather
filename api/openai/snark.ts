@@ -7,6 +7,43 @@ const SNARK_MOODS = [
   "wry",
 ];
 
+const CACHE_MS = 10 * 60 * 1000;
+const cache = new Map<string, { commentary: string; at: number }>();
+
+// Free and keyless, but anonymous callers are rate limited (~1 request / 15s per IP)
+// and it rejects `system` params, so the instructions travel inside the prompt text.
+async function pollinations(prompt: string): Promise<string | null> {
+  const url = new URL(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
+  url.searchParams.set("model", process.env.POLLINATIONS_MODEL ?? "openai-fast");
+  url.searchParams.set("seed", String(Math.floor(Math.random() * 1_000_000)));
+  const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
+  if (!r.ok) return null;
+  return (await r.text()) || null;
+}
+
+// Optional, more reliable backup: set GROQ_API_KEY (free tier) to enable.
+async function groq(system: string, user: string): Promise<string | null> {
+  if (!process.env.GROQ_API_KEY) return null;
+  const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    signal: AbortSignal.timeout(15000),
+    body: JSON.stringify({
+      model: process.env.GROQ_MODEL ?? "openai/gpt-oss-20b",
+      max_tokens: 400,
+      reasoning_effort: "low",
+      temperature: 0.9,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+    }),
+  });
+  if (!r.ok) return null;
+  const data = (await r.json()) as { choices?: Array<{ message?: { content?: string } }> };
+  return data.choices?.[0]?.message?.content ?? null;
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
@@ -59,34 +96,28 @@ export default async function handler(req: any, res: any) {
 
   const userPrompt = `${city}: ${conditionLabel}, ${Math.round(temperature)}°C (feels ${feelsLike !== undefined ? Math.round(feelsLike) : "?"}°C), humidity ${humidity}%, wind ${Math.round(windSpeed)} km/h, UV ${uvIndex}, ${isDay ? "day" : "night"}${precipitation ? `, ${precipitation} mm rain` : ""}${forecastDetails ? `. ${forecastDetails}` : ""}.`;
 
+  const cacheKey = `${city}|${conditionLabel}|${Math.round(temperature)}|${isDay}`;
+  const hit = cache.get(cacheKey);
+  if (hit && Date.now() - hit.at < CACHE_MS && !req.query?.fresh) {
+    res.json({ commentary: hit.commentary, mood });
+    return;
+  }
+
   try {
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: process.env.GROQ_MODEL ?? "openai/gpt-oss-20b",
-        max_tokens: 400,
-        reasoning_effort: "low",
-        temperature: 0.9,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
-    });
+    const prompt = `${systemPrompt}
 
-    if (!response.ok) throw new Error(`Groq error: ${response.status}`);
+Weather: ${userPrompt}
 
-    const data = (await response.json()) as {
-      choices: Array<{ message: { content: string } }>;
-    };
+Your one-sentence reply:`;
+    const raw =
+      (await pollinations(prompt).catch(() => null)) ??
+      (await groq(systemPrompt, userPrompt).catch(() => null));
+    if (!raw) throw new Error("No provider answered");
 
-    const commentary =
-      data.choices[0]?.message?.content?.trim() ??
-      "The weather exists. Make of that what you will.";
+    const text = raw.trim().replace(/^["“]|["”]$/g, "");
+    const commentary = text.length > 240 ? `${text.slice(0, 237).trimEnd()}...` : text;
+    cache.set(cacheKey, { commentary, at: Date.now() });
+    if (cache.size > 200) cache.delete(cache.keys().next().value as string);
 
     res.json({ commentary, mood });
   } catch {

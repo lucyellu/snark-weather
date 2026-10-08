@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { format } from 'date-fns';
-import { MapPin, Droplets, Wind, Sun, Eye, RefreshCw, AlertCircle, Palette, Volume2, VolumeX } from 'lucide-react';
+import { MapPin, Droplets, Wind, Sun, Eye, RefreshCw, AlertCircle, Palette, Volume2, VolumeX, Settings as SettingsIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { useGetCurrentWeather, useGetWeatherForecast, useGeocodeCity, useGenerateSnark } from '@workspace/api-client-react';
+import { useGetCurrentWeather, useGetWeatherForecast, useGenerateSnark } from '@workspace/api-client-react';
 import { WeatherIcon, mapWeatherCodeToIcon } from './components/WeatherIcons';
 import { Skeleton } from './components/ui/skeleton';
 
@@ -80,22 +79,22 @@ const THEMES: AppTheme[] = [
       '--th-spinner':       'hsl(36,100%,20%)',
     },
   },
-  /* 4 ── Mint — hsl(144°) */
+  /* 4 ── Hunter — deep hunter green, light text */
   {
     id: 'mint',
-    label: 'Mint',
-    bg: 'hsl(144,100%,80%)',
-    swatch: 'hsl(144,100%,80%)',
+    label: 'Hunter',
+    bg: '#2f4d38',
+    swatch: '#355e3b',
     vars: {
-      '--th-text':          'hsl(144,100%,18%)',
-      '--th-muted':         'hsla(144,100%,18%,0.62)',
-      '--th-faint':         'hsla(144,100%,18%,0.36)',
-      '--th-ultra':         'hsla(144,100%,18%,0.20)',
-      '--th-card':          'hsla(144,100%,18%,0.07)',
-      '--th-card2':         'hsla(144,100%,18%,0.13)',
-      '--th-border':        'hsla(144,100%,18%,0.18)',
-      '--th-border-faint':  'hsla(144,100%,18%,0.09)',
-      '--th-spinner':       'hsl(144,100%,18%)',
+      '--th-text':          '#dcebd9',
+      '--th-muted':         'rgba(220,235,217,0.72)',
+      '--th-faint':         'rgba(220,235,217,0.44)',
+      '--th-ultra':         'rgba(220,235,217,0.24)',
+      '--th-card':          'rgba(220,235,217,0.07)',
+      '--th-card2':         'rgba(220,235,217,0.13)',
+      '--th-border':        'rgba(220,235,217,0.20)',
+      '--th-border-faint':  'rgba(220,235,217,0.10)',
+      '--th-spinner':       '#dcebd9',
     },
   },
   /* 5 ── Sky — hsl(210°) */
@@ -116,22 +115,22 @@ const THEMES: AppTheme[] = [
       '--th-spinner':       'hsl(210,100%,20%)',
     },
   },
-  /* 6 ── Lavender — hsl(270°) */
+  /* 6 ── Lilac — soft lilac violet */
   {
     id: 'lavender',
-    label: 'Lavender',
-    bg: 'hsl(270,100%,80%)',
-    swatch: 'hsl(270,100%,80%)',
+    label: 'Lilac',
+    bg: 'hsl(262,58%,85%)',
+    swatch: 'hsl(262,58%,85%)',
     vars: {
-      '--th-text':          'hsl(270,100%,20%)',
-      '--th-muted':         'hsla(270,100%,20%,0.62)',
-      '--th-faint':         'hsla(270,100%,20%,0.36)',
-      '--th-ultra':         'hsla(270,100%,20%,0.20)',
-      '--th-card':          'hsla(270,100%,20%,0.07)',
-      '--th-card2':         'hsla(270,100%,20%,0.13)',
-      '--th-border':        'hsla(270,100%,20%,0.18)',
-      '--th-border-faint':  'hsla(270,100%,20%,0.09)',
-      '--th-spinner':       'hsl(270,100%,20%)',
+      '--th-text':          'hsl(262,42%,30%)',
+      '--th-muted':         'hsla(262,42%,30%,0.68)',
+      '--th-faint':         'hsla(262,42%,30%,0.40)',
+      '--th-ultra':         'hsla(262,42%,30%,0.22)',
+      '--th-card':          'hsla(262,42%,30%,0.07)',
+      '--th-card2':         'hsla(262,42%,30%,0.13)',
+      '--th-border':        'hsla(262,42%,30%,0.20)',
+      '--th-border-faint':  'hsla(262,42%,30%,0.10)',
+      '--th-spinner':       'hsl(262,42%,30%)',
     },
   },
 ];
@@ -192,6 +191,107 @@ function ThemePicker({ current, onChange }: { current: string; onChange: (id: st
   );
 }
 
+/* ── Timezone helpers ─────────────────────────────────────── */
+type PlaceResult = {
+  name: string; region: string | null; country: string | null;
+  lat: number; lon: number; timezone: string | null; population: number | null;
+};
+
+const DEVICE_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+function loadTzSetting(): string {
+  try { return localStorage.getItem('snark-tz') ?? 'location'; } catch { return 'location'; }
+}
+function saveTzSetting(v: string) {
+  try { localStorage.setItem('snark-tz', v); } catch { /* noop */ }
+}
+
+function fmt(d: Date | string, opts: Intl.DateTimeFormatOptions, tz?: string) {
+  const date = new Date(d);
+  try { return new Intl.DateTimeFormat(undefined, { ...opts, timeZone: tz }).format(date); }
+  catch { return new Intl.DateTimeFormat(undefined, opts).format(date); }
+}
+const fmtTime = (d: Date | string, tz?: string) => fmt(d, { hour: 'numeric', minute: '2-digit' }, tz);
+const fmtHour = (d: Date | string, tz?: string) => fmt(d, { hour: 'numeric' }, tz).replace(' ', '');
+const fmtDate = (d: Date, tz: string | undefined, long = false) =>
+  fmt(d, { weekday: long ? 'long' : 'short', month: 'short', day: 'numeric' }, tz);
+function tzAbbrev(d: Date, tz?: string) {
+  try {
+    return new Intl.DateTimeFormat(undefined, { timeZoneName: 'short', timeZone: tz })
+      .formatToParts(d).find(p => p.type === 'timeZoneName')?.value ?? '';
+  } catch { return ''; }
+}
+function allTimeZones(): string[] {
+  try {
+    const fn = (Intl as unknown as { supportedValuesOf?: (k: string) => string[] }).supportedValuesOf;
+    const list = fn ? fn('timeZone') : [];
+    return list.includes(DEVICE_TZ) ? list : [DEVICE_TZ, ...list];
+  } catch { return [DEVICE_TZ]; }
+}
+
+/* ── Settings ─────────────────────────────────────────────── */
+function SettingsPanel({
+  tzSetting, onChange, locationTz, now, effectiveTz,
+}: {
+  tzSetting: string; onChange: (v: string) => void;
+  locationTz?: string; now: Date; effectiveTz?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const zones = React.useMemo(allTimeZones, []);
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-label="Settings"
+        className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+        style={{ color: 'var(--th-muted)' }}
+        onMouseEnter={e => (e.currentTarget.style.color = 'var(--th-text)')}
+        onMouseLeave={e => (e.currentTarget.style.color = 'var(--th-muted)')}
+      >
+        <SettingsIcon className="w-4 h-4" />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -4 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 top-10 z-50 w-72 rounded-2xl p-4 shadow-2xl"
+            style={{ background: 'var(--th-card2)', backdropFilter: 'blur(16px)', border: '1px solid var(--th-border)' }}
+          >
+            <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--th-faint)' }}>
+              Timezone
+            </div>
+            <select
+              value={tzSetting}
+              onChange={e => onChange(e.target.value)}
+              className="w-full h-9 rounded-lg px-2 text-sm outline-none"
+              style={{ background: 'var(--th-card)', border: '1px solid var(--th-border)', color: 'var(--th-text)' }}
+            >
+              <option value="location">Selected location{locationTz ? ` (${locationTz})` : ''}</option>
+              <option value="device">This device ({DEVICE_TZ})</option>
+              <optgroup label="All timezones">
+                {zones.map(z => <option key={z} value={z}>{z.replace(/_/g, ' ')}</option>)}
+              </optgroup>
+            </select>
+            <div className="mt-4 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--th-faint)' }}>
+              Right now
+            </div>
+            <div className="text-2xl font-semibold mt-1" style={{ color: 'var(--th-text)' }}>
+              {fmtTime(now, effectiveTz)}{' '}
+              <span className="text-xs font-medium" style={{ color: 'var(--th-muted)' }}>{tzAbbrev(now, effectiveTz)}</span>
+            </div>
+            <div className="text-xs" style={{ color: 'var(--th-muted)' }}>
+              {fmtDate(now, effectiveTz, true)}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 /* ── App ──────────────────────────────────────────────────── */
 export default function App() {
   const [coords, setCoords] = useState<{ lat: number; lon: number }>({ lat: 49.2827, lon: -123.1207 });
@@ -199,6 +299,10 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [time, setTime] = useState(new Date());
+  const [tzSetting, setTzSetting] = useState<string>(loadTzSetting);
+  const [placeTz, setPlaceTz] = useState<string | undefined>(undefined);
+  const [suggestions, setSuggestions] = useState<PlaceResult[]>([]);
+  const [searching, setSearching] = useState(false);
   const [themeId, setThemeId] = useState<string>(loadThemeId);
   const [speaking, setSpeaking] = useState(false);
   const [cachedCommentary, setCachedCommentary] = useState<string>(
@@ -221,14 +325,14 @@ export default function App() {
   }
 
   useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 60000);
+    const timer = setInterval(() => setTime(new Date()), 15000);
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => { setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude }); setCity("My Location"); },
+      (pos) => { setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude }); setPlaceTz(undefined); setCity("My Location"); },
       () => { /* keep Vancouver */ },
       { timeout: 5000 }
     );
@@ -244,10 +348,39 @@ export default function App() {
     { query: { queryKey: ['weather-forecast', coords.lat, coords.lon], staleTime: 15 * 60 * 1000, refetchInterval: 15 * 60 * 1000 } }
   );
 
-  const { refetch: fetchGeocode } = useGeocodeCity(
-    { city: searchTerm },
-    { query: { enabled: false } }
-  );
+  const locationTz = placeTz ?? (weather as { timezone?: string } | undefined)?.timezone;
+  const effectiveTz = tzSetting === 'location' ? locationTz : tzSetting === 'device' ? undefined : tzSetting;
+
+  function handleTzChange(v: string) {
+    setTzSetting(v);
+    saveTzSetting(v);
+  }
+
+  // Debounced place search so the user can pick the right "Vancouver"
+  useEffect(() => {
+    if (!searchOpen) return;
+    const q = searchTerm.trim();
+    if (q.length < 2 || q === city) { setSuggestions([]); return; }
+    setSearching(true);
+    const ctrl = new AbortController();
+    const t = setTimeout(async () => {
+      try {
+        const r = await fetch(`/api/weather/search?q=${encodeURIComponent(q)}`, { signal: ctrl.signal });
+        const j = (await r.json()) as { results?: PlaceResult[] };
+        setSuggestions(j.results ?? []);
+      } catch { /* aborted or offline */ }
+      setSearching(false);
+    }, 250);
+    return () => { clearTimeout(t); ctrl.abort(); };
+  }, [searchTerm, searchOpen, city]);
+
+  function pickPlace(r: PlaceResult) {
+    setCoords({ lat: r.lat, lon: r.lon });
+    setCity([r.name, r.region].filter(Boolean).join(', '));
+    setPlaceTz(r.timezone ?? undefined);
+    setSuggestions([]);
+    setSearchOpen(false);
+  }
 
   // Stop TTS and persist commentary when it updates
   useEffect(() => {
@@ -293,17 +426,9 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weather?.weatherCode, weather?.temperature, weather?.city, forecast?.daily?.[0]?.tempMax]);
 
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchTerm.trim()) return;
-    try {
-      const result = await fetchGeocode();
-      if (result.data) {
-        setCoords({ lat: result.data.lat, lon: result.data.lon });
-        setCity(result.data.city || searchTerm);
-        setSearchOpen(false);
-      }
-    } catch { /* noop */ }
+    if (suggestions[0]) pickPlace(suggestions[0]);
   };
 
   const handleRefreshSnark = () => {
@@ -363,7 +488,7 @@ export default function App() {
         <header className="flex items-center justify-between z-10 relative mb-2">
           <div className="flex-1">
             {searchOpen ? (
-              <form onSubmit={handleSearch} className="flex items-center gap-2">
+              <form onSubmit={handleSearch} className="relative flex items-center gap-2">
                 <input
                   autoFocus
                   placeholder="Search city…"
@@ -377,6 +502,39 @@ export default function App() {
                   }}
                   onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
                 />
+                {(suggestions.length > 0 || (searching && searchTerm.trim().length >= 2)) && (
+                  <ul
+                    className="absolute left-0 top-12 z-50 w-80 max-w-[85vw] rounded-xl p-1 shadow-2xl"
+                    style={{ background: 'var(--th-card2)', backdropFilter: 'blur(16px)', border: '1px solid var(--th-border)' }}
+                  >
+                    {suggestions.length === 0 && (
+                      <li className="px-3 py-2 text-xs" style={{ color: 'var(--th-muted)' }}>Searching…</li>
+                    )}
+                    {suggestions.map((r, i) => (
+                      <li key={`${r.lat}-${r.lon}-${i}`}>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => { e.preventDefault(); pickPlace(r); }}
+                          className="w-full text-left px-3 py-2 rounded-lg flex items-center justify-between gap-3 hover:opacity-80"
+                          style={{ color: 'var(--th-text)' }}
+                        >
+                          <span className="min-w-0">
+                            <span className="block text-sm font-semibold truncate">{r.name}</span>
+                            <span className="block text-xs truncate" style={{ color: 'var(--th-muted)' }}>
+                              {[r.region, r.country].filter(Boolean).join(', ')}
+                            </span>
+                          </span>
+                          {r.timezone && (
+                            <span className="text-right text-xs shrink-0" style={{ color: 'var(--th-muted)' }}>
+                              <span className="block font-medium">{fmtTime(time, r.timezone)}</span>
+                              <span className="block" style={{ color: 'var(--th-faint)' }}>{tzAbbrev(time, r.timezone)}</span>
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </form>
             ) : (
               <button
@@ -393,9 +551,10 @@ export default function App() {
 
           <div className="flex items-center gap-3">
             <ThemePicker current={themeId} onChange={handleThemeChange} />
+            <SettingsPanel tzSetting={tzSetting} onChange={handleTzChange} locationTz={locationTz} now={time} effectiveTz={effectiveTz} />
             <div className="text-right text-sm font-medium" style={{ color: 'var(--th-muted)' }}>
-              <div>{format(time, "h:mm a")}</div>
-              <div className="text-xs" style={{ color: 'var(--th-faint)' }}>{format(time, "EEE, MMM d")}</div>
+              <div>{fmtTime(time, effectiveTz)}</div>
+              <div className="text-xs" style={{ color: 'var(--th-faint)' }}>{fmtDate(time, effectiveTz)} · {tzAbbrev(time, effectiveTz)}</div>
             </div>
           </div>
         </header>
@@ -477,10 +636,10 @@ export default function App() {
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <div className="text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--th-muted)' }}>
-                          {format(time, "EEEE, MMM d")}
+                          {fmtDate(time, effectiveTz, true)}
                         </div>
                         <div className="text-xs" style={{ color: 'var(--th-faint)' }}>
-                          {format(time, "h:mm a")} · {weather?.conditionLabel}
+                          {fmtTime(time, effectiveTz)} · {weather?.conditionLabel}
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
@@ -573,7 +732,7 @@ export default function App() {
                       {forecast.hourly.map((h, i) => (
                         <div key={i} className="flex flex-col items-center min-w-[3.5rem] snap-center">
                           <span className="text-xs font-medium mb-2" style={{ color: 'var(--th-muted)' }}>
-                            {format(new Date(h.time), "ha")}
+                            {fmtHour(h.time, effectiveTz)}
                           </span>
                           <WeatherIcon type={mapWeatherCodeToIcon(h.weatherCode)} size="sm" className="mb-2" />
                           <span className="text-sm font-bold" style={{ color: 'var(--th-text)' }}>

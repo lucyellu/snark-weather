@@ -29,13 +29,17 @@ export default async function handler(req: any, res: any) {
     url.searchParams.set("wind_speed_unit", "kmh");
     url.searchParams.set("temperature_unit", "celsius");
     url.searchParams.set("forecast_days", "7");
+    url.searchParams.set("timezone", "auto");
+    url.searchParams.set("timeformat", "unixtime");
 
     const response = await fetch(url.toString());
     if (!response.ok) throw new Error(`Open-Meteo error: ${response.status}`);
 
     const data = (await response.json()) as {
+      timezone: string;
+      utc_offset_seconds: number;
       daily: {
-        time: string[];
+        time: number[];
         temperature_2m_max: number[];
         temperature_2m_min: number[];
         weather_code: number[];
@@ -44,7 +48,7 @@ export default async function handler(req: any, res: any) {
         uv_index_max: number[];
       };
       hourly: {
-        time: string[];
+        time: number[];
         temperature_2m: number[];
         weather_code: number[];
         precipitation_probability: number[];
@@ -54,10 +58,12 @@ export default async function handler(req: any, res: any) {
 
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-    const daily = data.daily.time.map((date, i) => ({
-      date,
-      dayLabel:
-        i === 0 ? "Today" : dayNames[new Date(date + "T12:00:00").getDay()],
+    // With timeformat=unixtime, daily times are midnight in the location's zone.
+    const daily = data.daily.time.map((t, i) => {
+      const day = new Date((t + data.utc_offset_seconds) * 1000);
+      return {
+      date: day.toISOString().slice(0, 10),
+      dayLabel: i === 0 ? "Today" : dayNames[day.getUTCDay()],
       tempMax: Math.round(data.daily.temperature_2m_max[i]),
       tempMin: Math.round(data.daily.temperature_2m_min[i]),
       weatherCode: data.daily.weather_code[i],
@@ -65,21 +71,22 @@ export default async function handler(req: any, res: any) {
       precipitationSum: data.daily.precipitation_sum[i],
       windSpeedMax: Math.round(data.daily.wind_speed_10m_max[i]),
       uvIndexMax: Math.round(data.daily.uv_index_max[i]),
-    }));
+      };
+    });
 
     const now = new Date();
     const hourly = data.hourly.time
-      .map((time, i) => ({
-        time,
+      .map((t, i) => ({
+        time: new Date(t * 1000).toISOString(),
         temperature: Math.round(data.hourly.temperature_2m[i]),
         weatherCode: data.hourly.weather_code[i],
         precipitationProbability: data.hourly.precipitation_probability[i],
         windSpeed: Math.round(data.hourly.wind_speed_10m[i]),
       }))
-      .filter((h) => new Date(h.time) >= now)
+      .filter((h) => new Date(h.time).getTime() > now.getTime() - 3600_000)
       .slice(0, 24);
 
-    res.json({ daily, hourly });
+    res.json({ daily, hourly, timezone: data.timezone });
   } catch {
     res.status(500).json({ error: "Failed to fetch forecast" });
   }

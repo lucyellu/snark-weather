@@ -49,20 +49,6 @@ function IconContents({ type, clipId }: IconContentsProps) {
         </div>
       )}
 
-      {/* Rain drops */}
-      {(type === 'rainy' || type === 'thunderstorm') && (
-        <div className="cp-icon__rain">
-          <div className="cp-icon__rain-drops" />
-        </div>
-      )}
-
-      {/* Snow flakes */}
-      {type === 'snowy' && (
-        <div className="cp-icon__snow">
-          <div className="cp-icon__snow-flakes" />
-        </div>
-      )}
-
       {/* Lightning bolt */}
       {type === 'thunderstorm' && <div className="cp-icon__thunder" />}
 
@@ -88,6 +74,21 @@ function IconContents({ type, clipId }: IconContentsProps) {
           </clipPath>
         </svg>
       </div>
+
+      {/* Rain drops - drawn in front of the cloud */}
+      {(type === 'rainy' || type === 'thunderstorm') && (
+        <div className="cp-icon__rain">
+          <div className="cp-icon__rain-drops" />
+          <div className="cp-icon__rain-drops cp-icon__rain-drops--b" />
+        </div>
+      )}
+
+      {/* Snow flakes */}
+      {type === 'snowy' && (
+        <div className="cp-icon__snow">
+          <div className="cp-icon__snow-flakes" />
+        </div>
+      )}
 
       {/* Off-screen shadow caster */}
       <div className="cp-icon__cloud-shadow" />

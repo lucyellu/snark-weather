@@ -2,6 +2,7 @@ import type { Config } from "@netlify/functions";
 import current from "../../api/weather/current";
 import forecast from "../../api/weather/forecast";
 import geocode from "../../api/weather/geocode";
+import search from "../../api/weather/search";
 import snark from "../../api/openai/snark";
 
 type Handler = (req: any, res: any) => Promise<void> | void;
@@ -10,6 +11,7 @@ const routes: Record<string, Handler> = {
   "/api/weather/current": current,
   "/api/weather/forecast": forecast,
   "/api/weather/geocode": geocode,
+  "/api/weather/search": search,
   "/api/openai/snark": snark,
 };
 

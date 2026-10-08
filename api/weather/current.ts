@@ -25,11 +25,13 @@ export default async function handler(req: any, res: any) {
     );
     url.searchParams.set("wind_speed_unit", "kmh");
     url.searchParams.set("temperature_unit", "celsius");
+    url.searchParams.set("timezone", "auto");
 
     const response = await fetch(url.toString());
     if (!response.ok) throw new Error(`Open-Meteo error: ${response.status}`);
 
     const data = (await response.json()) as {
+      timezone: string;
       current: {
         temperature_2m: number;
         apparent_temperature: number;
@@ -46,6 +48,7 @@ export default async function handler(req: any, res: any) {
 
     const c = data.current;
     res.json({
+      timezone: data.timezone,
       city: city ?? `${lat.toFixed(2)}, ${lon.toFixed(2)}`,
       lat,
       lon,
