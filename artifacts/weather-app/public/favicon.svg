@@ -1,50 +1,50 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="512" height="512" viewBox="0 0 543 543" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#7db9ff"/>
-      <stop offset="1" stop-color="#b5dbff"/>
+    <linearGradient id="sky" x1="543" y1="0" x2="0" y2="543" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a3cdfb"/>
+      <stop offset="0.55" stop-color="#95c4fa"/>
+      <stop offset="1" stop-color="#7fb0ec"/>
     </linearGradient>
-    <radialGradient id="sun" cx="0.4" cy="0.35" r="0.8">
-      <stop offset="0" stop-color="#ffe27a"/>
-      <stop offset="1" stop-color="#ffb62e"/>
+    <radialGradient id="sunBody" cx="0.5" cy="0.1" r="1">
+      <stop offset="0" stop-color="#f6b845"/>
+      <stop offset="1" stop-color="#f0873f"/>
     </radialGradient>
-    <linearGradient id="cloud" x1="0" y1="250" x2="0" y2="410" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="1" stop-color="#e3eefc"/>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffd35c" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#ffd35c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="120" y1="140" x2="420" y2="450" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d9e8fa"/>
+      <stop offset="1" stop-color="#bcd2ee"/>
     </linearGradient>
-    <filter id="soft" x="-20%" y="-20%" width="140%" height="160%">
-      <feGaussianBlur stdDeviation="9"/>
-    </filter>
-    <clipPath id="tile"><rect width="512" height="512" rx="108"/></clipPath>
+    <filter id="blur24" x="-30%" y="-30%" width="160%" height="170%"><feGaussianBlur stdDeviation="24"/></filter>
+    <filter id="blur6" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="6"/></filter>
+    <clipPath id="tile"><rect width="543" height="543" rx="110"/></clipPath>
+    <clipPath id="cloudShape"><path d="M190 445 L380 445 A110 110 0 1 0 328.5 237.7 A150 150 0 1 0 190 445 Z"/></clipPath>
   </defs>
 
   <g clip-path="url(#tile)">
-    <rect width="512" height="512" fill="url(#sky)"/>
+    <rect width="543" height="543" fill="url(#sky)"/>
 
-    <!-- sun, peeking out behind the cloud -->
-    <g stroke="#ffc83d" stroke-width="22" stroke-linecap="round">
-      <line x1="338" y1="62" x2="338" y2="92"/>
-      <line x1="338" y1="278" x2="338" y2="248"/>
-      <line x1="230" y1="170" x2="260" y2="170"/>
-      <line x1="446" y1="170" x2="416" y2="170"/>
-      <line x1="262" y1="94" x2="283" y2="115"/>
-      <line x1="414" y1="94" x2="393" y2="115"/>
-      <line x1="414" y1="246" x2="393" y2="225"/>
+    <!-- sun glow + rays + body, sitting behind the cloud -->
+    <circle cx="352" cy="200" r="150" fill="url(#glow)"/>
+    <g stroke="#f6c041" stroke-width="28" stroke-linecap="round">
+      <line x1="308" y1="92" x2="322" y2="124"/>
+      <line x1="398" y1="94" x2="383" y2="128"/>
+      <line x1="430" y1="173" x2="462" y2="165"/>
+      <line x1="250" y1="152" x2="272" y2="170"/>
+      <line x1="452" y1="248" x2="438" y2="238"/>
     </g>
-    <circle cx="338" cy="170" r="70" fill="url(#sun)"/>
+    <circle cx="352" cy="202" r="62" fill="url(#sunBody)"/>
 
-    <!-- cloud shadow -->
-    <g fill="#3f78c9" opacity="0.35" filter="url(#soft)" transform="translate(0 16)">
-      <rect x="82" y="290" width="348" height="112" rx="56"/>
-      <circle cx="190" cy="290" r="78"/>
-      <circle cx="298" cy="266" r="96"/>
-    </g>
+    <!-- soft shadow cast by the cloud, toward the lower left -->
+    <path d="M190 445 L380 445 A110 110 0 1 0 328.5 237.7 A150 150 0 1 0 190 445 Z" fill="#4f86cc" opacity="0.38" filter="url(#blur24)" transform="translate(-34 34)"/>
 
-    <!-- cloud -->
-    <g fill="url(#cloud)">
-      <rect x="82" y="290" width="348" height="112" rx="56"/>
-      <circle cx="190" cy="290" r="78"/>
-      <circle cx="298" cy="266" r="96"/>
+    <!-- frosted glass cloud -->
+    <path d="M190 445 L380 445 A110 110 0 1 0 328.5 237.7 A150 150 0 1 0 190 445 Z" fill="url(#glass)" opacity="0.93"/>
+    <!-- glass rim: bright edge only along the outer outline -->
+    <g clip-path="url(#cloudShape)" filter="url(#blur6)">
+      <path d="M190 445 L380 445 A110 110 0 1 0 328.5 237.7 A150 150 0 1 0 190 445 Z" stroke="#ffffff" stroke-width="18" opacity="0.8"/>
     </g>
   </g>
 </svg>
