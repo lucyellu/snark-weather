@@ -728,7 +728,7 @@ export default function App() {
                     <h3 className="text-[10px] font-bold uppercase tracking-widest mb-4 px-1" style={{ color: 'var(--th-faint)' }}>
                       Hourly Forecast
                     </h3>
-                    <div className="flex gap-4 overflow-x-auto pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
+                    <div className="flex gap-4 overflow-x-auto pb-12 -mb-10 snap-x" style={{ scrollbarWidth: 'none' }}>
                       {forecast.hourly.map((h, i) => (
                         <div key={i} className="flex flex-col items-center min-w-[3.5rem] snap-center">
                           <span className="text-xs font-medium mb-2" style={{ color: 'var(--th-muted)' }}>
