@@ -139,8 +139,8 @@
 }
 
 @keyframes cp-rain {
-  0%   { transform: translateY(-11rem) rotate(45deg); }
-  100% { transform: translateY(6.5rem) rotate(45deg); }
+  0%   { transform: translateY(-11rem) rotate(14deg); }
+  100% { transform: translateY(8.5rem) rotate(14deg); }
 }
 
 @keyframes cp-thunder {
@@ -275,47 +275,49 @@
 }
 
 /* ── Rain ──────────────────────────────────────────── */
+/* Thin slanted streaks. Each streak is a box-shadow copy of one line, so the
+   whole shower is two elements. --rain-w / --rain-h are set per icon size so
+   the lines stay visible when the icon is scaled down. */
 .cp-icon__rain {
   position: absolute;
-  /* from the middle of the cloud (cloud spans 1rem-13rem) down to its bottom */
-  top: 6.5rem;
+  /* starts inside the lower half of the cloud (cloud spans 1rem-13rem)
+     and runs ~4rem past its bottom edge */
+  top: 8.5rem;
   left: 0;
   width: 100%;
-  height: 6.5rem;
+  height: 8.5rem;
   overflow: hidden;
   z-index: 2;
   pointer-events: none;
   /* soft fade in and out */
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 70%, transparent);
-  mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 70%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 20%, #000 60%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 20%, #000 60%, transparent);
 }
 .cp-icon__rain-drops {
   position: absolute;
   top: 0;
-  left: 13rem;
-  height: 1.2rem;
-  width: 1.2rem;
+  left: 9rem; /* cloud centre */
+  height: var(--rain-h, 1.3rem);
+  width: var(--rain-w, 0.14rem);
   background: #3f6fe0;
+  border-radius: 1rem;
   animation: cp-rain 3s linear infinite;
-  transform: translateY(-11rem) rotate(45deg);
-  opacity: 0.9;
+  transform: translateY(-11rem) rotate(14deg);
   color: #3f6fe0;
-  filter: drop-shadow(0 0 0.12rem rgba(255, 255, 255, 0.95));
-  border-radius: 0 1rem 1rem;
   box-shadow:
-    1rem 2rem, 1rem 7rem, 4rem 8rem, -5rem 8rem, -2rem 4rem,
-    0rem 11rem, 4rem 5rem, -2rem 8rem,
-    4rem 3rem 0 -0.1rem, 0rem 5rem 0 -0.1rem,
-    -4rem 5rem 0 -0.1rem, -2rem 10rem 0 -0.1rem,
-    -1rem 3rem 0 -0.2rem, 2rem 5rem 0 -0.2rem,
-    -2rem 11rem 0 -0.2rem, 2rem 9rem 0 -0.2rem,
-    -4rem 3rem 0 -0.2rem;
+    -6rem 4rem, -4rem 9rem, -2rem 2rem, 2rem 7rem, 4rem 3rem, 6rem 10rem,
+    -6rem 8rem rgba(63, 111, 224, 0.5), -2rem 6rem rgba(63, 111, 224, 0.5),
+    0rem 11rem rgba(63, 111, 224, 0.5), 0rem 5rem rgba(63, 111, 224, 0.5),
+    4rem 8rem rgba(63, 111, 224, 0.5), 6rem 2rem rgba(63, 111, 224, 0.5),
+    -4rem 1rem rgba(63, 111, 224, 0.5);
 }
 
-/* Second layer, half a cycle behind and shifted sideways, so the rain never pauses */
+/* Second layer sits between the first one's lines, half a cycle behind,
+   so the rain never pauses */
 .cp-icon__rain-drops--b {
-  left: 12.4rem;
+  left: 10rem;
   animation-delay: -1.5s;
+  opacity: 0.75;
 }
 
 /* ── Snow ──────────────────────────────────────────── */

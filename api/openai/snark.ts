@@ -64,6 +64,7 @@ export default async function handler(req: any, res: any) {
     dailyLow,
     precipitationChance,
     tomorrowCondition,
+    birthdays,
   } = req.body ?? {};
 
   if (
@@ -92,11 +93,19 @@ export default async function handler(req: any, res: any) {
     .filter(Boolean)
     .join("; ");
 
-  const systemPrompt = `You are SNARK, a witty weather sidekick. Reply with ONE short, funny sentence (max 20 words) about the weather right now, with a useful nudge (umbrella, layers, sunscreen) if relevant. Dry and clever, playful rather than mean or gloomy. No markdown, no emojis, no quotes. Celsius only. Tone: ${mood}.`;
+  // First names, e.g. "Jane (turning 34)", from the Birthday Book when someone has a birthday today
+  const birthdayList: string[] = Array.isArray(birthdays)
+    ? birthdays.filter((b: unknown): b is string => typeof b === "string" && b.length > 0 && b.length < 60).slice(0, 5)
+    : [];
+  const birthdayNote = birthdayList.length
+    ? ` It is also the birthday of ${birthdayList.join(", ")} today: wish them a happy birthday by name, tying it to the weather (e.g. a cake in the rain), all in that one short sentence.`
+    : "";
+
+  const systemPrompt = `You are SNARK, a witty weather sidekick. Reply with ONE short, funny sentence (max ${birthdayList.length ? 30 : 20} words) about the weather right now, with a useful nudge (umbrella, layers, sunscreen) if relevant.${birthdayNote} Dry and clever, playful rather than mean or gloomy. No markdown, no emojis, no quotes. Celsius only. Tone: ${mood}.`;
 
   const userPrompt = `${city}: ${conditionLabel}, ${Math.round(temperature)}°C (feels ${feelsLike !== undefined ? Math.round(feelsLike) : "?"}°C), humidity ${humidity}%, wind ${Math.round(windSpeed)} km/h, UV ${uvIndex}, ${isDay ? "day" : "night"}${precipitation ? `, ${precipitation} mm rain` : ""}${forecastDetails ? `. ${forecastDetails}` : ""}.`;
 
-  const cacheKey = `${city}|${conditionLabel}|${Math.round(temperature)}|${isDay}`;
+  const cacheKey = `${city}|${conditionLabel}|${Math.round(temperature)}|${isDay}|${birthdayList.join(",")}`;
   const hit = cache.get(cacheKey);
   if (hit && Date.now() - hit.at < CACHE_MS && !req.query?.fresh) {
     res.json({ commentary: hit.commentary, mood });

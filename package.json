@@ -11,6 +11,7 @@
   "private": true,
   "devDependencies": {
     "@netlify/functions": "^6.0.2",
+    "@types/node": "catalog:",
     "prettier": "^3.8.1",
     "typescript": "~5.9.2"
   }

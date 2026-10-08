@@ -106,6 +106,7 @@ export const GenerateSnarkBody = zod.object({
   dailyLow: zod.number().optional(),
   precipitationChance: zod.number().optional(),
   tomorrowCondition: zod.string().optional(),
+  birthdays: zod.array(zod.string()).optional(),
 });
 
 export const GenerateSnarkResponse = zod.object({

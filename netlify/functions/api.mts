@@ -3,6 +3,8 @@ import current from "../../api/weather/current";
 import forecast from "../../api/weather/forecast";
 import geocode from "../../api/weather/geocode";
 import search from "../../api/weather/search";
+import month from "../../api/weather/month";
+import birthdays from "../../api/birthdays/month";
 import snark from "../../api/openai/snark";
 
 type Handler = (req: any, res: any) => Promise<void> | void;
@@ -12,6 +14,8 @@ const routes: Record<string, Handler> = {
   "/api/weather/forecast": forecast,
   "/api/weather/geocode": geocode,
   "/api/weather/search": search,
+  "/api/weather/month": month,
+  "/api/birthdays/month": birthdays,
   "/api/openai/snark": snark,
 };
 

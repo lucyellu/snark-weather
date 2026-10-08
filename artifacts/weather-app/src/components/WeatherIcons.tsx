@@ -18,6 +18,8 @@ interface WeatherIconProps {
   className?: string;
   /** 'lg' = full animated hero icon; 'sm' = tiny scaled-down version for forecast rows */
   size?: 'lg' | 'sm';
+  /** width in px of a 'sm' icon (default 52) */
+  px?: number;
 }
 
 type CloudVariant = 'default' | 'thunder' | 'snow' | 'dark';
@@ -97,27 +99,30 @@ function IconContents({ type, clipId }: IconContentsProps) {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   The .cp-icon itself is 18rem × 13rem at font-size 15px
-   → 270px × 195px, then .cp-icon CSS applies scale(0.8)
-   → rendered visual ≈ 216px × 156px
+   The .cp-icon box is 18rem × 13rem at font-size 15px = 270 × 195px.
+   The cloud is centred horizontally in that box, so a scaled-down icon
+   gets a container of exactly box × scale; centring the container then
+   centres the cloud.
    ───────────────────────────────────────────────────────────── */
-const ICON_VISUAL_W = 216; // px
-const ICON_VISUAL_H = 156; // px
+const BOX_W = 270; // px
+const BOX_H = 195; // px
 
-export function WeatherIcon({ type, className = '', size = 'lg' }: WeatherIconProps) {
+export function WeatherIcon({ type, className = '', size = 'lg', px }: WeatherIconProps) {
   const rawId = useId();
   const clipId = `cp-${rawId.replace(/:/g, '')}`;
 
   if (size === 'sm') {
-    /* Small forecast icon: scale down to ~44×32px, no floating animation.
-       overflow-visible so sun rays / halos aren't clipped by the container. */
-    const scale = 44 / ICON_VISUAL_W;
-    const w = Math.round(ICON_VISUAL_W * scale);
-    const h = Math.round(ICON_VISUAL_H * scale);
+    /* Small icon (forecast rows, calendar cells): scaled to `px` wide, no
+       floating animation. overflow-visible so sun rays / halos aren't clipped. */
+    const width = px ?? 52;
+    const scale = width / BOX_W;
+    // keep rain streaks ~1.7px wide and at least ~9px long whatever the scale
+    const rainW = 1.7 / (scale * 15);
+    const rainH = Math.max(1.3, 9 / (scale * 15));
     return (
       <div
         className={`relative flex-shrink-0 ${className}`}
-        style={{ width: w, height: h, overflow: 'visible' }}
+        style={{ width, height: Math.round(BOX_H * scale), overflow: 'visible' }}
       >
         <div
           className="cp-icon"
@@ -130,7 +135,9 @@ export function WeatherIcon({ type, className = '', size = 'lg' }: WeatherIconPr
             transformOrigin: 'top left',
             animation: 'none',
             overflow: 'visible',
-          }}
+            '--rain-w': `${rainW}rem`,
+            '--rain-h': `${rainH}rem`,
+          } as React.CSSProperties}
         >
           <IconContents type={type} clipId={clipId} />
         </div>

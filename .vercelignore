@@ -1,0 +1,5 @@
+# Ship the UI and the serverless handlers in api/ (weather, month, snark).
+# The snark handler needs no key (keyless provider; GROQ_API_KEY optional).
+# Birthday Book data lives only on the local PC, so that code stays out of the public deploy.
+api/birthdays
+api/_shared/birthday-book.ts

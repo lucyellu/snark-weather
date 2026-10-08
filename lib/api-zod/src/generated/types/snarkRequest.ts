@@ -20,4 +20,5 @@ export interface SnarkRequest {
   dailyLow?: number;
   precipitationChance?: number;
   tomorrowCondition?: string;
+  birthdays?: string[];
 }

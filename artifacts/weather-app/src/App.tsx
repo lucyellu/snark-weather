@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MapPin, Droplets, Wind, Sun, Eye, RefreshCw, AlertCircle, Palette, Volume2, VolumeX, Settings as SettingsIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, Droplets, Wind, Sun, Eye, RefreshCw, AlertCircle, Palette, Volume2, VolumeX, Settings as SettingsIcon, ChevronLeft, ChevronRight, Cake } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { useGetCurrentWeather, useGetWeatherForecast, useGenerateSnark } from '@workspace/api-client-react';
 import { WeatherIcon, mapWeatherCodeToIcon } from './components/WeatherIcons';
+import { MonthView, useBirthdays } from './components/MonthView';
 import { Skeleton } from './components/ui/skeleton';
 
 /* ─────────────────────────────────────────────────────────────
@@ -227,6 +228,11 @@ function fmtDayMonth(isoDate: string) {
   const [y, m, d] = isoDate.split('-').map(Number);
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, d)));
 }
+// Today's calendar date at the chosen timezone, "YYYY-MM-DD"
+function ymdInTz(d: Date, tz?: string) {
+  try { return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: tz }).format(d); }
+  catch { return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(d); }
+}
 function tzAbbrev(d: Date, tz?: string) {
   try {
     return new Intl.DateTimeFormat(undefined, { timeZoneName: 'short', timeZone: tz })
@@ -384,6 +390,7 @@ export default function App() {
   const [cachedCommentary, setCachedCommentary] = useState<string>(
     () => localStorage.getItem('snark-commentary') ?? ''
   );
+  const [forecastView, setForecastView] = useState<'week' | 'month'>('week');
   const lastSnarkKey = useRef<string>('');
 
   const generateSnark = useGenerateSnark();
@@ -427,6 +434,21 @@ export default function App() {
   const locationTz = placeTz ?? (weather as { timezone?: string } | undefined)?.timezone;
   const effectiveTz = tzSetting === 'location' ? locationTz : tzSetting === 'device' ? undefined : tzSetting;
 
+  // Birthdays from the Birthday Book / Collaborators app that fall on today's date
+  const todayYmd = ymdInTz(time, effectiveTz);
+  const [, todayMonth, todayDay] = todayYmd.split('-').map(Number);
+  const birthdaysQ = useBirthdays(todayMonth);
+  const birthdaysToday = (birthdaysQ.data ?? []).filter(b => b.day === todayDay);
+  // First names only (plus age when known) so the AI service doesn't see full names of friends
+  const birthdayLabels = birthdaysToday.map(b => {
+    const who = b.kind === 'collaborator' ? b.name : b.firstName;
+    // friends' years are often placeholders (lots of 1990s), so only collaborators get an age
+    const age = b.kind === 'collaborator' && b.year ? Number(todayYmd.slice(0, 4)) - b.year : null;
+    return age && age > 0 && age < 120 ? `${who} (turning ${age})` : who;
+  });
+  const birthdayKey = birthdayLabels.join('|');
+  const birthdaysReady = !birthdaysQ.isLoading;
+
   function handleTzChange(v: string) {
     setTzSetting(v);
     saveTzSetting(v);
@@ -467,40 +489,44 @@ export default function App() {
     localStorage.setItem('snark-commentary', generateSnark.data.commentary);
   }, [generateSnark.data?.commentary]);
 
-  // Generate snark once BOTH weather and forecast are loaded
+  function buildSnarkBody() {
+    if (!weather) return null;
+    const today = forecast?.daily?.[0];
+    const tomorrow = forecast?.daily?.[1];
+    const maxPrecipChance = forecast?.hourly?.length
+      ? Math.max(...forecast.hourly.slice(0, 12).map(h => h.precipitationProbability))
+      : undefined;
+    return {
+      temperature: weather.temperature,
+      feelsLike: weather.feelsLike,
+      conditionLabel: weather.conditionLabel,
+      city: weather.city || city,
+      humidity: weather.humidity,
+      windSpeed: weather.windSpeed,
+      uvIndex: weather.uvIndex,
+      isDay: weather.isDay,
+      precipitation: weather.precipitation,
+      dailyHigh: today?.tempMax,
+      dailyLow: today?.tempMin,
+      precipitationChance: maxPrecipChance,
+      tomorrowCondition: tomorrow?.conditionLabel,
+      birthdays: birthdayLabels.length ? birthdayLabels : undefined,
+    };
+  }
+
+  // Generate snark once weather, forecast AND the birthday lookup are loaded
   // Key is based on actual conditions (not timestamp) to survive refetches
   useEffect(() => {
-    if (!weather || !forecast) return;
-    const key = `${weather.weatherCode}-${Math.round(weather.temperature)}-${weather.city}`;
+    if (!weather || !forecast || !birthdaysReady) return;
+    const key = `${weather.weatherCode}-${Math.round(weather.temperature)}-${weather.city}-${birthdayKey}`;
     if (lastSnarkKey.current === key) return;
     lastSnarkKey.current = key;
     if (weather.city) setCity(weather.city);
 
-    const today = forecast.daily?.[0];
-    const tomorrow = forecast.daily?.[1];
-    const maxPrecipChance = forecast.hourly?.length
-      ? Math.max(...forecast.hourly.slice(0, 12).map(h => h.precipitationProbability))
-      : undefined;
-
-    generateSnark.mutate({
-      data: {
-        temperature: weather.temperature,
-        feelsLike: weather.feelsLike,
-        conditionLabel: weather.conditionLabel,
-        city: weather.city || city,
-        humidity: weather.humidity,
-        windSpeed: weather.windSpeed,
-        uvIndex: weather.uvIndex,
-        isDay: weather.isDay,
-        precipitation: weather.precipitation,
-        dailyHigh: today?.tempMax,
-        dailyLow: today?.tempMin,
-        precipitationChance: maxPrecipChance,
-        tomorrowCondition: tomorrow?.conditionLabel,
-      }
-    });
+    const data = buildSnarkBody();
+    if (data) generateSnark.mutate({ data });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weather?.weatherCode, weather?.temperature, weather?.city, forecast?.daily?.[0]?.tempMax]);
+  }, [weather?.weatherCode, weather?.temperature, weather?.city, forecast?.daily?.[0]?.tempMax, birthdaysReady, birthdayKey]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -508,29 +534,8 @@ export default function App() {
   };
 
   const handleRefreshSnark = () => {
-    if (!weather) return;
-    const today = forecast?.daily?.[0];
-    const tomorrow = forecast?.daily?.[1];
-    const maxPrecipChance = forecast?.hourly?.length
-      ? Math.max(...forecast.hourly.slice(0, 12).map(h => h.precipitationProbability))
-      : undefined;
-    generateSnark.mutate({
-      data: {
-        temperature: weather.temperature,
-        feelsLike: weather.feelsLike,
-        conditionLabel: weather.conditionLabel,
-        city: weather.city || city,
-        humidity: weather.humidity,
-        windSpeed: weather.windSpeed,
-        uvIndex: weather.uvIndex,
-        isDay: weather.isDay,
-        precipitation: weather.precipitation,
-        dailyHigh: today?.tempMax,
-        dailyLow: today?.tempMin,
-        precipitationChance: maxPrecipChance,
-        tomorrowCondition: tomorrow?.conditionLabel,
-      }
-    });
+    const data = buildSnarkBody();
+    if (data) generateSnark.mutate({ data });
   };
 
   const handleSpeak = () => {
@@ -764,6 +769,15 @@ export default function App() {
                         {generateSnark.data?.commentary || cachedCommentary || "I have no words for how mediocre this weather is."}
                       </p>
                     )}
+
+                    {birthdaysToday.length > 0 && (
+                      <div className="flex items-center gap-1.5 mt-3 text-xs font-semibold" style={{ color: 'var(--th-muted)' }}>
+                        <Cake className="w-3.5 h-3.5 shrink-0" />
+                        <span>
+                          {birthdaysToday.map(b => b.name).join(' · ')}{birthdaysToday.length === 1 ? "'s" : ''} birthday today
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -783,7 +797,7 @@ export default function App() {
                   >
                     <span style={{ color: 'var(--th-muted)' }}>{icon}</span>
                     <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--th-faint)' }}>{label}</span>
-                    <span className="text-base font-bold" style={{ color: 'var(--th-text)' }}>{value}</span>
+                    <span className="text-base font-bold whitespace-nowrap" style={{ color: 'var(--th-text)' }}>{value}</span>
                   </div>
                 ))}
               </div>
@@ -831,9 +845,24 @@ export default function App() {
                     className="rounded-2xl p-4"
                     style={{ background: 'var(--th-card)', border: '1px solid var(--th-border)' }}
                   >
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest mb-4 px-1" style={{ color: 'var(--th-faint)' }}>
-                      7-Day Forecast
-                    </h3>
+                    <div className="flex gap-4 mb-4 px-1">
+                      {([['week', '7-Day Forecast'], ['month', 'Month']] as const).map(([id, label]) => (
+                        <button
+                          key={id}
+                          onClick={() => setForecastView(id)}
+                          className="text-[10px] font-bold uppercase tracking-widest pb-0.5 transition-colors"
+                          style={{
+                            color: forecastView === id ? 'var(--th-text)' : 'var(--th-faint)',
+                            borderBottom: `2px solid ${forecastView === id ? 'var(--th-text)' : 'transparent'}`,
+                          }}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    {forecastView === 'month' ? (
+                      <MonthView lat={coords.lat} lon={coords.lon} todayYmd={todayYmd} />
+                    ) : (
                     <div className="space-y-1">
                       {forecast.daily.map((d, i) => (
                         <div
@@ -860,6 +889,7 @@ export default function App() {
                         </div>
                       ))}
                     </div>
+                    )}
                   </div>
                 </div>
               ) : null}

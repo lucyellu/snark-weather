@@ -293,6 +293,10 @@ components:
           type: number
         tomorrowCondition:
           type: string
+        birthdays:
+          type: array
+          items:
+            type: string
       required:
         - temperature
         - conditionLabel
