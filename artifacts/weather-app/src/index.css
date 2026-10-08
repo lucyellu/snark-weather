@@ -140,7 +140,7 @@
 
 @keyframes cp-rain {
   0%   { transform: translateY(-11rem) rotate(45deg); }
-  100% { transform: translateY(11rem)  rotate(45deg); }
+  100% { transform: translateY(6.5rem) rotate(45deg); }
 }
 
 @keyframes cp-thunder {
@@ -277,25 +277,26 @@
 /* ── Rain ──────────────────────────────────────────── */
 .cp-icon__rain {
   position: absolute;
-  top: 1.6rem;
+  /* from the middle of the cloud (cloud spans 1rem-13rem) down to its bottom */
+  top: 6.5rem;
   left: 0;
   width: 100%;
-  height: 11rem;
+  height: 6.5rem;
   overflow: hidden;
   z-index: 2;
   pointer-events: none;
-  /* soft fade at the top and bottom of the cloud */
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 78%, transparent);
-  mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 78%, transparent);
+  /* soft fade in and out */
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 70%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 70%, transparent);
 }
 .cp-icon__rain-drops {
   position: absolute;
   top: 0;
   left: 13rem;
-  height: 0.8rem;
-  width: 0.8rem;
+  height: 1.2rem;
+  width: 1.2rem;
   background: #3f6fe0;
-  animation: cp-rain 3.6s linear infinite;
+  animation: cp-rain 3s linear infinite;
   transform: translateY(-11rem) rotate(45deg);
   opacity: 0.9;
   color: #3f6fe0;
@@ -314,7 +315,7 @@
 /* Second layer, half a cycle behind and shifted sideways, so the rain never pauses */
 .cp-icon__rain-drops--b {
   left: 12.4rem;
-  animation-delay: -1.8s;
+  animation-delay: -1.5s;
 }
 
 /* ── Snow ──────────────────────────────────────────── */
@@ -362,7 +363,7 @@
   -webkit-backdrop-filter: blur(8px);
   /* clip-path is set via inline style per-instance for unique IDs */
   box-shadow:
-    inset 0rem -1.3rem 0.25rem -1rem #fff,
+    inset 0rem -1.3rem 0.9rem -1rem rgba(255,255,255,0.55),
     inset 0rem 0rem 5rem 0rem rgba(255,255,255,0.5);
 }
 
@@ -377,7 +378,7 @@
   width: 11.9rem;
   border-radius: 50%;
   box-shadow:
-    inset 0rem -1.1rem 0.25rem -1rem #fff,
+    inset 0rem -1.1rem 0.8rem -1rem rgba(255,255,255,0.6),
     inset 0.45rem 0rem 0.25rem -0.25rem #fff,
     inset -0.45rem 0.5rem 0.25rem -0.45em #fff,
     inset 0.25rem 0.25rem 0.5rem 0rem rgba(0,0,0,0.3);
