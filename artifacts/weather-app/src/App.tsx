@@ -341,7 +341,7 @@ function ScrollStrip({ children }: { children: React.ReactNode }) {
       aria-label={dir === 1 ? 'Scroll forecast right' : 'Scroll forecast left'}
       className="absolute top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-opacity hover:opacity-80"
       style={{
-        [dir === 1 ? 'right' : 'left']: '0.5rem',
+        [dir === 1 ? 'right' : 'left']: '-0.875rem',
         background: 'var(--th-card2)',
         border: '1px solid var(--th-border)',
         color: 'var(--th-text)',
@@ -800,7 +800,7 @@ export default function App() {
 
                   {/* Hourly */}
                   <div
-                    className="rounded-2xl p-4 overflow-hidden"
+                    className="rounded-2xl p-4"
                     style={{ background: 'var(--th-card)', border: '1px solid var(--th-border)' }}
                   >
                     <h3 className="text-[10px] font-bold uppercase tracking-widest mb-4 px-1" style={{ color: 'var(--th-faint)' }}>
