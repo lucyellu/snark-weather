@@ -222,6 +222,11 @@ function fmtHour(d: Date | string, tz?: string) {
 }
 const fmtDate = (d: Date, tz: string | undefined, long = false) =>
   fmt(d, { weekday: long ? 'long' : 'short', month: 'short', day: 'numeric' }, tz);
+// "2026-10-08" -> "Oct 8" (the API already gives the location's own calendar date)
+function fmtDayMonth(isoDate: string) {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, d)));
+}
 function tzAbbrev(d: Date, tz?: string) {
   try {
     return new Intl.DateTimeFormat(undefined, { timeZoneName: 'short', timeZone: tz })
@@ -836,8 +841,11 @@ export default function App() {
                           className="flex items-center justify-between px-2 py-2 rounded-lg transition-colors"
                           style={{ borderBottom: i < forecast.daily.length - 1 ? '1px solid var(--th-border-faint)' : 'none' }}
                         >
-                          <span className="w-16 text-sm font-semibold" style={{ color: 'var(--th-text)' }}>
+                          <span className="w-28 text-sm font-semibold" style={{ color: 'var(--th-text)' }}>
                             {i === 0 ? 'Today' : d.dayLabel}
+                            <span className="ml-1.5 text-xs font-medium" style={{ color: 'var(--th-faint)' }}>
+                              {fmtDayMonth(d.date)}
+                            </span>
                           </span>
                           <div className="flex-1 flex justify-center">
                             <WeatherIcon type={mapWeatherCodeToIcon(d.weatherCode)} size="sm" />
