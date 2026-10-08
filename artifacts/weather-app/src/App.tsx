@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MapPin, Droplets, Wind, Sun, Eye, RefreshCw, AlertCircle, Palette, Volume2, VolumeX, Settings as SettingsIcon } from 'lucide-react';
+import { MapPin, Droplets, Wind, Sun, Eye, RefreshCw, AlertCircle, Palette, Volume2, VolumeX, Settings as SettingsIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { useGetCurrentWeather, useGetWeatherForecast, useGenerateSnark } from '@workspace/api-client-react';
@@ -295,6 +295,70 @@ function SettingsPanel({
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/* ── Horizontal scroller: full-bleed, soft edge fades, arrow buttons ── */
+function ScrollStrip({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [edges, setEdges] = useState({ left: false, right: false });
+
+  const update = React.useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    setEdges({
+      left: el.scrollLeft > 4,
+      right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+    });
+  }, []);
+
+  useEffect(() => {
+    update();
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [update, children]);
+
+  const scrollBy = (dir: 1 | -1) => {
+    const el = ref.current;
+    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.75, behavior: 'smooth' });
+  };
+
+  const fade = '2.5rem';
+  const mask = `linear-gradient(to right, ${edges.left ? 'transparent' : '#000'} 0, #000 ${fade}, #000 calc(100% - ${fade}), ${edges.right ? 'transparent' : '#000'} 100%)`;
+
+  const arrow = (dir: 1 | -1) => (
+    <button
+      onClick={() => scrollBy(dir)}
+      aria-label={dir === 1 ? 'Scroll forecast right' : 'Scroll forecast left'}
+      className="absolute top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-opacity hover:opacity-80"
+      style={{
+        [dir === 1 ? 'right' : 'left']: '0.5rem',
+        background: 'var(--th-card2)',
+        border: '1px solid var(--th-border)',
+        color: 'var(--th-text)',
+        backdropFilter: 'blur(8px)',
+      }}
+    >
+      {dir === 1 ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+    </button>
+  );
+
+  return (
+    <div className="relative -mx-4">
+      {edges.left && arrow(-1)}
+      {edges.right && arrow(1)}
+      <div
+        ref={ref}
+        onScroll={update}
+        className="flex gap-4 overflow-x-auto px-4 pb-12 -mb-10 snap-x"
+        style={{ scrollbarWidth: 'none', WebkitMaskImage: mask, maskImage: mask }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
@@ -735,7 +799,7 @@ export default function App() {
                     <h3 className="text-[10px] font-bold uppercase tracking-widest mb-4 px-1" style={{ color: 'var(--th-faint)' }}>
                       Hourly Forecast
                     </h3>
-                    <div className="flex gap-4 overflow-x-auto pb-12 -mb-10 snap-x" style={{ scrollbarWidth: 'none' }}>
+                    <ScrollStrip>
                       {forecast.hourly.map((h, i) => (
                         <div key={i} className="flex flex-col items-center min-w-[3.5rem] snap-center">
                           <span className="text-xs font-medium mb-2" style={{ color: 'var(--th-muted)' }}>
@@ -752,7 +816,7 @@ export default function App() {
                           )}
                         </div>
                       ))}
-                    </div>
+                    </ScrollStrip>
                   </div>
 
                   {/* 7-Day */}
