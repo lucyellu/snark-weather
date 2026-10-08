@@ -556,8 +556,8 @@ export default function App() {
       <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col min-h-[100dvh]">
 
         {/* ── Header ── */}
-        <header className="flex items-center justify-between z-10 relative mb-2">
-          <div className="flex-1">
+        <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 z-10 relative mb-2">
+          <div className="min-w-0">
             {searchOpen ? (
               <form onSubmit={handleSearch} className="relative flex items-center gap-2">
                 <input
@@ -610,23 +610,25 @@ export default function App() {
             ) : (
               <button
                 onClick={() => { setSearchOpen(true); setSearchTerm(city); }}
-                className="flex items-center gap-2 hover:opacity-75 transition-opacity"
+                className="flex items-center gap-2 max-w-full hover:opacity-75 transition-opacity"
               >
                 <MapPin className="w-5 h-5" style={{ color: 'var(--th-muted)' }} />
-                <h1 className="text-xl font-semibold tracking-tight" style={{ color: 'var(--th-text)' }}>
+                <h1 className="text-xl font-semibold tracking-tight truncate" style={{ color: 'var(--th-text)' }}>
                   {weatherLoading && !weather ? 'Locating…' : (weather?.city || city)}
                 </h1>
               </button>
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Centre: date with time underneath (timezone lives in Settings) */}
+          <div className="text-center leading-tight">
+            <div className="text-sm font-semibold" style={{ color: 'var(--th-text)' }}>{fmtDate(time, effectiveTz)}</div>
+            <div className="text-xs font-medium" style={{ color: 'var(--th-muted)' }}>{fmtTime(time, effectiveTz)}</div>
+          </div>
+
+          <div className="flex items-center justify-end gap-1">
             <ThemePicker current={themeId} onChange={handleThemeChange} />
             <SettingsPanel tzSetting={tzSetting} onChange={handleTzChange} locationTz={locationTz} now={time} effectiveTz={effectiveTz} />
-            <div className="text-right text-sm font-medium" style={{ color: 'var(--th-muted)' }}>
-              <div>{fmtTime(time, effectiveTz)}</div>
-              <div className="text-xs" style={{ color: 'var(--th-faint)' }}>{fmtDate(time, effectiveTz)} · {tzAbbrev(time, effectiveTz)}</div>
-            </div>
           </div>
         </header>
 
