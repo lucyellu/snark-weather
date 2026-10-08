@@ -668,12 +668,12 @@ export default function App() {
 
                 <div className="flex items-start leading-none">
                   <span
-                    className="text-9xl font-black tracking-tighter"
+                    className="text-9xl font-black tracking-tighter pr-2"
                     style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic', color: 'var(--th-text)' }}
                   >
                     {Math.round(weather.temperature)}
                   </span>
-                  <span className="text-4xl font-bold mt-3" style={{ color: 'var(--th-muted)' }}>°</span>
+                  <span className="text-4xl font-bold mt-3 ml-1.5" style={{ color: 'var(--th-muted)' }}>°</span>
                 </div>
 
                 <div
